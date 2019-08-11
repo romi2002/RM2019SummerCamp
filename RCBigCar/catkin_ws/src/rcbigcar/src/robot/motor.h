@@ -17,8 +17,8 @@ class Motor
 
     void setCoefficients(double _Kp, double _Ki, double _Kd, double _Kf, double _KmaxI, double _KmaxO);
 
-    double getVelocity();
-    double getPosition();
+    double getVelocity() const;
+    double getPosition() const;
 
     /* Setpoint */
     double Setpoint;

@@ -42,12 +42,12 @@ void Motor::setCoefficients(double _Kp, double _Ki, double _Kd, double _Kf, doub
 	KmaxO = _KmaxO;
 }
 
-double Motor::getVelocity()
+double Motor::getVelocity() const 
 {
 	return Hardware()->motors[ID].speed_rpm * Preset->RPMToRad;
 }
 
-double Motor::getPosition()
+double Motor::getPosition() const 
 {
 	return (Hardware()->motors[ID].total_angle * Preset->TickToRad) - CalibrationValue;
 }

@@ -99,6 +99,9 @@ int main(int argc, char **argv)
     unpack_obj.index = 0;
     unpack_obj.unpack_step = STEP_HEADER_SOF;
 
+    //100Hz
+    ros::Rate rate(100);
+
     while(ros::ok()) {
         if(serial.waitReadable()) {
             //read to buffer
@@ -112,7 +115,7 @@ int main(int argc, char **argv)
             }
         }
 
-        ros::Duration(1.0 / 100.0).sleep();
+        rate.sleep();
     }
 
 	return 0;

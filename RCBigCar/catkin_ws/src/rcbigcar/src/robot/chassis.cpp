@@ -26,7 +26,7 @@ Chassis::Chassis()
   // Setup Motors
   for (int i = 0; i < 4; i++)
   {
-    motors[i] = new Motor(i, &MOTOR_CHASSIS, MOTOR_CHASSIS_PARAMTER);
+    motors.emplace_back(Motor(i, &MOTOR_CHASSIS, MOTOR_CHASSIS_PARAMTER));
   }
 
   // Setup Paramters
@@ -52,7 +52,7 @@ Chassis::Chassis()
   //lastt = ros::Time::now();
   for (int i = 0; i < 4; i++)
   {
-    last_position[i] = motors[i]->getPosition();
+    last_position[i] = motors[i].getPosition();
   }
 
   // Setup Watchdog
@@ -70,18 +70,17 @@ Chassis::Chassis()
 Chassis::~Chassis()
 {
   // Free Motors
-  for (int i = 0; i < 4; i++)
-  {
-    delete motors[i];
+  for(auto motor : motors){
+    delete &motor;
   }
 }
 
 void Chassis::update()
 {
   // Update Motors
-  for (int i = 0; i < 4; i++)
+  for(auto motor : motors)
   {
-    motors[i]->update();
+    motor.update();
   }
 
   // Update Modules
@@ -134,8 +133,8 @@ void Chassis::UpdateOdometry()
   // calculate delta
   for (int id = 0; id < 4; id++)
   {
-    d[id] = motors[id]->getPosition() - last_position[id];
-    last_position[id] = motors[id]->getPosition();
+    d[id] = motors[id].getPosition() - last_position[id];
+    last_position[id] = motors[id].getPosition();
   }
 
   double k = CHASSIS_WHEEL_R / 4.0;
@@ -231,7 +230,7 @@ void Chassis::CallbackVelocity(const geometry_msgs::Twist::ConstPtr &twist)
 
   // Send Velocity
   for (int i = 0; i < 4; i++)
-    motors[i]->Setpoint = w[i];
+    motors[i].Setpoint = w[i];
 }
 
 void Chassis::UpdateWatchdog()
@@ -242,21 +241,21 @@ void Chassis::UpdateWatchdog()
     // Zero motor powers
     for (int i = 0; i < 4; i++)
     {
-      motors[i]->Setpoint = 0;
+      motors[i].Setpoint = 0;
     }
   }
 }
 
-void Chassis::CallbackDynamicParam(rcbigcar::ChassisConfig &config, uint32_t level)
+void Chassis::CallbackDynamicParam(const rcbigcar::ChassisConfig &config, uint32_t level)
 {
   // Dynamic Params
   Dyn_Config_MaxVel = config.MaxVel;
   //Dyn_Config_VisualVel = config.VisualVel;
   //Dyn_Config_TimeDelay = config.time_delay;
   // Dynamic Motor Params
-  for (int i = 0; i < 4; i++)
-  {
-    motors[i]->setCoefficients(config.Kp, config.Ki, config.Kd, config.Kf, config.KmaxI, 1.0);
+  
+  for(auto motor : motors){
+    motor.setCoefficients(config.Kp, config.Ki, config.Kd, config.Kf, config.KmaxI, 1.0);
   }
 
   ROS_INFO("Chassis Reconfigure: [Kp = %lf, Ki = %lf, Kd = %lf, Kf = %lf, KmaxI = %lf, MaxVel = %lf]",
@@ -272,10 +271,9 @@ void Chassis::UpdateDebug()
   std_msgs::Float64MultiArray motorReal;
   //std_msgs::Float64MultiArray pose;
 
-  for (int i = 0; i < 4; i++)
-  {
-    motorSetpoint.data.push_back(motors[i]->Setpoint);
-    motorReal.data.push_back(motors[i]->getVelocity());
+  for(const auto motor : motors){
+    motorSetpoint.data.push_back(motor.Setpoint);
+    motorReal.data.push_back(motor.getVelocity());
   }
 
   dbg_spd_setpoint_pub.publish(motorSetpoint);
